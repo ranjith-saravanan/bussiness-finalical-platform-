@@ -3,12 +3,15 @@ import { api } from '../api';
 import { Notification } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { Card, Badge, LoadingSpinner, EmptyState } from '../components/UI';
-import { Bell, CheckCheck, RefreshCw, AlertTriangle, AlertCircle, Info, CheckCircle2 } from 'lucide-react';
+import { Bell, CheckCheck, RefreshCw, AlertTriangle, AlertCircle, Info, CheckCircle2, Filter } from 'lucide-react';
 
 export const NotificationsPage: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState<string>('ALL');
   const { setUnreadCount } = useAuth();
+
+  const categories = ['ALL', 'BUDGET', 'CASH_FLOW', 'SAVINGS', 'BUSINESS', 'EXPENSE', 'FORECAST'];
 
   const loadNotifications = async () => {
     try {
@@ -62,12 +65,17 @@ export const NotificationsPage: React.FC = () => {
     }
   };
 
+  const filteredNotifications = notifications.filter(n => {
+    if (activeCategory === 'ALL') return true;
+    return (n.category || 'GENERAL').toUpperCase() === activeCategory;
+  });
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Notification Center</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Automated alerts for budget limits, cash flow health, and goals.</p>
+          <p className="text-sm text-slate-500 mt-0.5">Automated rule-based alerts for budgets, cash flow, tax reserves, and goals.</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -87,12 +95,30 @@ export const NotificationsPage: React.FC = () => {
         </div>
       </div>
 
-      <Card title="Alert Feed" subtitle="Real-time financial threshold triggers">
+      {/* Category Pills Bar */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <Filter size={14} className="text-slate-400 shrink-0 ml-1 mr-1" />
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 ${
+              activeCategory === cat
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      <Card title="Alert Feed" subtitle={`Showing ${filteredNotifications.length} notification(s)`}>
         {loading ? (
           <LoadingSpinner />
-        ) : notifications.length === 0 ? (
+        ) : filteredNotifications.length === 0 ? (
           <EmptyState
-            title="All clear! No notifications."
+            title="All clear! No notifications in this category."
             description="Run a rule scan or add transactions to test budget alerts and milestones."
             action={
               <button
@@ -105,8 +131,8 @@ export const NotificationsPage: React.FC = () => {
           />
         ) : (
           <div className="divide-y divide-slate-100">
-            {notifications.map((n) => {
-              const iconMap = {
+            {filteredNotifications.map((n) => {
+              const iconMap: Record<string, React.ReactNode> = {
                 alert: <AlertCircle size={18} className="text-rose-500" />,
                 warning: <AlertTriangle size={18} className="text-amber-500" />,
                 info: <Info size={18} className="text-indigo-500" />,
@@ -122,10 +148,13 @@ export const NotificationsPage: React.FC = () => {
                 >
                   <div className="flex items-start gap-3">
                     <div className="p-2 rounded-xl bg-white border border-slate-100 shrink-0">
-                      {iconMap[n.type]}
+                      {iconMap[n.type] || <Info size={18} className="text-indigo-500" />}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-slate-200 text-slate-700 uppercase">
+                          {n.category || 'GENERAL'}
+                        </span>
                         <h4 className="text-sm font-bold text-slate-800">{n.title}</h4>
                         {!n.is_read && (
                           <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0" />

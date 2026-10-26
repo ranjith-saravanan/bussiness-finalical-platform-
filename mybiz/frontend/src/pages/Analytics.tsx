@@ -123,6 +123,57 @@ export const AnalyticsPage: React.FC = () => {
         </Card>
       </div>
 
+      {/* Business & Customer Intelligence Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Customers Leaderboard */}
+        <Card title="Top Client Revenue Contribution" subtitle="High-value client relationships">
+          <div className="space-y-3 pt-2">
+            {(businessData?.top_customers || []).length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-6">No client sales recorded yet</p>
+            ) : (
+              businessData.top_customers.map((c: any, i: number) => (
+                <div key={i} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                  <div>
+                    <h5 className="font-bold text-slate-800">{c.name}</h5>
+                    <p className="text-[11px] text-slate-500">{c.company} • {c.sales_count} sale(s)</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-bold text-emerald-600 block">${c.total_revenue.toLocaleString()}</span>
+                    <span className="text-[10px] text-slate-400">AOV: ${c.average_sale_value.toLocaleString()}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+
+        {/* Revenue by Product / Service */}
+        <Card title="Top Products & Services" subtitle="Revenue breakdown by offering">
+          <div className="space-y-3 pt-2">
+            {(businessData?.revenue_by_product || []).length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-6">No product sales recorded yet</p>
+            ) : (
+              businessData.revenue_by_product.map((p: any, i: number) => (
+                <div key={i} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h5 className="font-bold text-slate-800">{p.name}</h5>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-indigo-100 text-indigo-700">
+                        {p.type}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500">{p.units_sold} unit(s) sold @ ${p.price}</p>
+                  </div>
+                  <div className="text-right font-bold text-slate-900">
+                    ${p.total_revenue.toLocaleString()}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+      </div>
+
       {/* Category Breakdowns & Utilization */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Top Expense Categories */}

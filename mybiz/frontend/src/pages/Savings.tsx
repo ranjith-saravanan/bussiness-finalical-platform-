@@ -182,6 +182,14 @@ export const SavingsPage: React.FC = () => {
                     </div>
 
                     <div className="my-3">
+                      <div className="flex justify-between items-baseline mb-1">
+                        <span className="text-[11px] font-bold text-indigo-700">
+                          {goal.progress_percentage ?? ((goal.current_amount / goal.target_amount) * 100).toFixed(1)}% Completed
+                        </span>
+                        <span className="text-[11px] font-medium text-slate-500">
+                          Remaining: <strong className="text-slate-800">${(goal.remaining_amount ?? Math.max(0, goal.target_amount - goal.current_amount)).toLocaleString()}</strong>
+                        </span>
+                      </div>
                       <ProgressBar
                         value={goal.current_amount}
                         max={goal.target_amount}
@@ -191,13 +199,27 @@ export const SavingsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-baseline pt-2 border-t border-slate-100 text-xs text-slate-500 mt-2">
-                    <div>
-                      Saved: <strong className="text-slate-900">${goal.current_amount.toLocaleString()}</strong>
+                  <div className="space-y-2 pt-2 border-t border-slate-100 text-xs text-slate-500 mt-2">
+                    <div className="flex justify-between items-baseline">
+                      <div>
+                        Saved: <strong className="text-slate-900">${goal.current_amount.toLocaleString()}</strong>
+                      </div>
+                      <div>
+                        Target: <strong className="text-slate-900">${goal.target_amount.toLocaleString()}</strong>
+                      </div>
                     </div>
-                    <div>
-                      Target: <strong className="text-slate-900">${goal.target_amount.toLocaleString()}</strong>
-                    </div>
+
+                    {goal.required_monthly_contribution ? (
+                      <div className="bg-indigo-50/70 p-2 rounded-lg text-[11px] text-indigo-900 flex justify-between items-center">
+                        <span>Required pace:</span>
+                        <strong>${goal.required_monthly_contribution.toLocaleString()}/mo</strong>
+                      </div>
+                    ) : goal.estimated_completion_months !== null && goal.estimated_completion_months !== undefined ? (
+                      <div className="bg-slate-100 p-2 rounded-lg text-[11px] text-slate-700 flex justify-between items-center">
+                        <span>Est. completion:</span>
+                        <strong>~{goal.estimated_completion_months} months</strong>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               );

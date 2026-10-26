@@ -62,7 +62,13 @@ export const api = {
   getMe: () => request<any>('/auth/me'),
 
   // Dashboard
-  getDashboard: () => request<any>('/dashboard'),
+  getDashboard: (taxRate?: number, safetyBuffer?: number) => {
+    const q = new URLSearchParams();
+    if (taxRate !== undefined) q.append('tax_rate', taxRate.toString());
+    if (safetyBuffer !== undefined) q.append('custom_safety_buffer', safetyBuffer.toString());
+    const qs = q.toString();
+    return request<any>(`/dashboard${qs ? `?${qs}` : ''}`);
+  },
 
   // Income
   getIncomes: () => request<any[]>('/income'),
@@ -111,8 +117,12 @@ export const api = {
 
   // Sales
   getSales: (business_id?: number) => request<any[]>(`/sales${business_id ? `?business_id=${business_id}` : ''}`),
+  getSalesSummary: (business_id?: number) => request<any>(`/sales/summary${business_id ? `?business_id=${business_id}` : ''}`),
   createSale: (data: any) => request<any>('/sales', { method: 'POST', body: JSON.stringify(data) }),
   deleteSale: (id: number) => request<void>(`/sales/${id}`, { method: 'DELETE' }),
+
+  // Commitments
+  getCommitments: () => request<any>('/commitments'),
 
   // Business Transactions
   getBusinessTransactions: (business_id?: number, type?: string) => {

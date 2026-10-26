@@ -82,7 +82,7 @@ export const CustomersPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <StatCard
           title="Total Customers"
           value={customers.length}
@@ -96,6 +96,13 @@ export const CustomersPage: React.FC = () => {
           subtitle="Currently active relationships"
           icon={<Users size={20} />}
           color="green"
+        />
+        <StatCard
+          title="Customer Revenue"
+          value={`$${customers.reduce((acc, c) => acc + (c.total_revenue || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          subtitle="Total recorded client sales"
+          icon={<Users size={20} />}
+          color="brand"
         />
         <StatCard
           title="Lead Pipeline"
@@ -130,6 +137,8 @@ export const CustomersPage: React.FC = () => {
                   <th className="pb-3">Name</th>
                   <th className="pb-3">Company</th>
                   <th className="pb-3">Contact</th>
+                  <th className="pb-3 text-right">Total Revenue</th>
+                  <th className="pb-3 text-center">Orders</th>
                   <th className="pb-3">Status</th>
                   <th className="pb-3 text-center">Action</th>
                 </tr>
@@ -150,6 +159,12 @@ export const CustomersPage: React.FC = () => {
                           <Phone size={12} className="text-slate-400" /> {c.phone}
                         </div>
                       )}
+                    </td>
+                    <td className="py-3 text-right font-bold text-slate-800">
+                      ${(c.total_revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-3 text-center text-xs text-slate-600">
+                      {c.sales_count || 0}
                     </td>
                     <td className="py-3">
                       <span

@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 from datetime import datetime, timezone
-from app.database import get_db
 from app.models import User, Income, Expense
 from app.schemas import ForecastResponse
 from app.auth import get_current_user
@@ -10,9 +8,9 @@ from app.services.forecast_service import forecast_next_period
 router = APIRouter(prefix="/forecast", tags=["Forecasting"])
 
 @router.get("", response_model=ForecastResponse)
-def get_financial_forecast(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    incomes = db.query(Income).filter(Income.user_id == current_user.id).order_by(Income.date.asc()).all()
-    expenses = db.query(Expense).filter(Expense.user_id == current_user.id).order_by(Expense.date.asc()).all()
+async def get_financial_forecast(current_user: User = Depends(get_current_user)):
+    incomes = await Income.find(Income.user_id == current_user.id).sort(Income.date).to_list()
+    expenses = await Expense.find(Expense.user_id == current_user.id).sort(Expense.date).to_list()
 
     # Aggregate by month
     monthly_incomes = {}
@@ -44,6 +42,24 @@ def get_financial_forecast(current_user: User = Depends(get_current_user), db: S
     forecast_exp = forecast_next_period(expense_series, fallback_avg=sum(expense_series)/len(expense_series) if expense_series else 0.0)
     forecast_net = forecast_inc - forecast_exp
 
+    # Recurring expenses
+    rec_expenses = sum(e.amount for e in expenses if e.is_recurring)
+
+    # Trends
+    if len(income_series) >= 2:
+        income_trend = "growing" if income_series[-1] > income_series[-2] else ("declining" if income_series[-1] < income_series[-2] else "stable")
+    else:
+        income_trend = "stable"
+
+    if len(expense_series) >= 2:
+        expense_trend = "growing" if expense_series[-1] > expense_series[-2] else ("declining" if expense_series[-1] < expense_series[-2] else "stable")
+    else:
+        expense_trend = "stable"
+
+    # Forecast bounds (10% confidence band)
+    forecast_lower = round(forecast_net * 0.85, 2) if forecast_net >= 0 else round(forecast_net * 1.15, 2)
+    forecast_upper = round(forecast_net * 1.15, 2) if forecast_net >= 0 else round(forecast_net * 0.85, 2)
+
     if forecast_net > 0:
         trend = "positive"
     elif forecast_net < 0:
@@ -58,5 +74,10 @@ def get_financial_forecast(current_user: User = Depends(get_current_user), db: S
         forecasted_expenses=round(forecast_exp, 2),
         forecasted_net_cashflow=round(forecast_net, 2),
         trend_direction=trend,
+        income_trend=income_trend,
+        expense_trend=expense_trend,
+        forecast_lower=forecast_lower,
+        forecast_upper=forecast_upper,
+        recurring_commitments=round(rec_expenses, 2),
         disclaimer="Estimated projection using statistical linear regression and moving average. This is not guaranteed financial advice."
     )

@@ -132,8 +132,9 @@ export const ProductsPage: React.FC = () => {
                   <th className="pb-3">Name</th>
                   <th className="pb-3">Type</th>
                   <th className="pb-3">SKU</th>
-                  <th className="pb-3">Description</th>
+                  <th className="pb-3 text-center">Units Sold</th>
                   <th className="pb-3 text-right">Unit Price</th>
+                  <th className="pb-3 text-right">Total Revenue</th>
                   <th className="pb-3 text-center">Action</th>
                 </tr>
               </thead>
@@ -151,9 +152,12 @@ export const ProductsPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-3 text-xs font-mono text-slate-500">{p.sku || '—'}</td>
-                    <td className="py-3 text-xs text-slate-400 max-w-xs truncate">{p.description || '—'}</td>
+                    <td className="py-3 text-center text-xs font-medium text-slate-600">{p.units_sold || 0}</td>
                     <td className="py-3 text-right font-bold text-slate-900">
                       ${p.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-3 text-right font-bold text-emerald-600">
+                      ${(p.total_revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
                     <td className="py-3 text-center">
                       <button

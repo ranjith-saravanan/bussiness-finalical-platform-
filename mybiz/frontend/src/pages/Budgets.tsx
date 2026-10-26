@@ -184,13 +184,32 @@ export const BudgetsPage: React.FC = () => {
                     showLabel={false}
                   />
 
-                  <div className="flex justify-between items-center text-xs mt-2 text-slate-500">
+                  <div className="flex justify-between items-center text-xs mt-3 text-slate-500">
                     <span>
-                      Spent: <strong className="text-slate-800">${b.spent.toLocaleString()}</strong>
+                      Spent: <strong className="text-slate-800">${b.spent.toLocaleString()}</strong> ({b.percentage.toFixed(1)}%)
                     </span>
                     <span>
-                      Cap: <strong className="text-slate-800">${b.allocated.toLocaleString()}</strong>
+                      Remaining: <strong className={b.remaining >= 0 ? "text-emerald-700 font-semibold" : "text-rose-600 font-semibold"}>${b.remaining.toLocaleString()}</strong>
                     </span>
+                  </div>
+
+                  {/* Budget Pacing & Projections */}
+                  <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px] text-slate-500">
+                    <div>
+                      Days Remaining: <strong className="text-slate-700">{b.days_remaining ?? 0} days</strong>
+                    </div>
+                    <div className="text-right">
+                      Projected Month-End: <strong className="text-slate-700">${b.projected_month_end?.toLocaleString() ?? b.spent.toLocaleString()}</strong>
+                    </div>
+                    {b.potential_overspend && b.potential_overspend > 0 ? (
+                      <div className="col-span-2 text-rose-600 font-medium bg-rose-50/60 px-2 py-1 rounded-md text-[10px]">
+                        ⚠️ Potential Overspend: ${b.potential_overspend.toLocaleString()} (Estimated run-rate)
+                      </div>
+                    ) : (
+                      <div className="col-span-2 text-emerald-700 font-medium bg-emerald-50/60 px-2 py-1 rounded-md text-[10px]">
+                        ✓ On Track to stay within monthly cap
+                      </div>
+                    )}
                   </div>
                 </div>
               );

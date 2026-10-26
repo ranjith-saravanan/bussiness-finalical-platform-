@@ -91,6 +91,10 @@ class BudgetStatusOut(BaseModel):
     percentage: float
     month: int
     year: int
+    days_remaining: Optional[int] = 0
+    projected_month_end: Optional[float] = 0.0
+    potential_overspend: Optional[float] = 0.0
+    status_flag: Optional[str] = "on_track"
 
 # Savings Goal
 class SavingsCreate(BaseModel):
@@ -104,6 +108,10 @@ class SavingsOut(SavingsCreate):
     id: int
     user_id: int
     created_at: datetime
+    remaining_amount: Optional[float] = 0.0
+    progress_percentage: Optional[float] = 0.0
+    required_monthly_contribution: Optional[float] = None
+    estimated_completion_months: Optional[float] = None
 
 # Customer
 class CustomerCreate(BaseModel):
@@ -118,6 +126,9 @@ class CustomerOut(CustomerCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
     created_at: datetime
+    total_revenue: Optional[float] = 0.0
+    sales_count: Optional[int] = 0
+    average_order_value: Optional[float] = 0.0
 
 # Product
 class ProductCreate(BaseModel):
@@ -132,6 +143,8 @@ class ProductOut(ProductCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
     created_at: datetime
+    total_revenue: Optional[float] = 0.0
+    units_sold: Optional[int] = 0
 
 # Sale Item & Sale
 class SaleItemCreate(BaseModel):
@@ -186,25 +199,53 @@ class NotificationOut(BaseModel):
     user_id: int
     title: str
     message: str
+    category: Optional[str] = "GENERAL"
     type: str
     is_read: bool
     created_at: datetime
 
 
-# Dashboard Unified Metrics
+# Dashboard Unified Metrics & Safe-to-Spend Cockpit
 class DashboardSummary(BaseModel):
+    # Personal Liquidity
     total_personal_income: float
     total_personal_expense: float
     net_personal_cashflow: float
+    available_personal_cash: float
+    upcoming_personal_commitments: float
+    savings_reserve_requirement: float
+    safety_buffer: float
+    safe_personal_spending: float
+    safe_to_spend_breakdown: dict
+
+    # Savings & Budgets
     total_savings_current: float
     total_savings_target: float
     total_budget_allocated: float
     total_budget_spent: float
+
+    # Business Operations
     business_revenue: float
     business_expenses: float
     business_profit: float
+    business_margin: float
+    tax_reserve_rate: float
+    suggested_tax_reserve: float
     net_total_cashflow: float
+
+    # Commitments & Decisions
+    recurring_monthly_commitments: float
+    five_questions: dict
     recent_transactions: List[dict]
+
+# Commitments Summary
+class CommitmentSummary(BaseModel):
+    monthly_recurring_income: float
+    monthly_recurring_expenses: float
+    monthly_recurring_net: float
+    upcoming_commitments_current_month: float
+    upcoming_commitments_next_month: float
+    recurring_items: List[dict]
 
 # AI & Forecast Schemas
 class AIChatRequest(BaseModel):
@@ -214,7 +255,10 @@ class AIChatRequest(BaseModel):
 class AIChatResponse(BaseModel):
     answer: str
     source: str  # "gemini" or "deterministic-advisor"
+    intent: Optional[str] = None
     financial_context: dict
+    decision_rubric: Optional[dict] = None
+    evidence: Optional[dict] = None
 
 class AIRecommendation(BaseModel):
     id: str
@@ -223,6 +267,7 @@ class AIRecommendation(BaseModel):
     title: str
     description: str
     impact: str
+    evidence: Optional[str] = None
 
 class ForecastResponse(BaseModel):
     historical_months: List[str]
@@ -231,4 +276,9 @@ class ForecastResponse(BaseModel):
     forecasted_expenses: float
     forecasted_net_cashflow: float
     trend_direction: str  # "positive", "negative", "neutral"
+    income_trend: Optional[str] = "stable"
+    expense_trend: Optional[str] = "stable"
+    forecast_lower: Optional[float] = None
+    forecast_upper: Optional[float] = None
+    recurring_commitments: Optional[float] = 0.0
     disclaimer: str

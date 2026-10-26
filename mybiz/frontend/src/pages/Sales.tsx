@@ -120,8 +120,16 @@ export const SalesPage: React.FC = () => {
     }
   };
 
-  const totalPaid = sales.filter(s => s.status === 'paid').reduce((acc, s) => acc + s.total_amount, 0);
-  const pendingCount = sales.filter(s => s.status === 'pending').length;
+  const paidSales = sales.filter(s => s.status === 'paid');
+  const pendingSales = sales.filter(s => s.status === 'pending');
+  const cancelledSales = sales.filter(s => s.status === 'cancelled');
+
+  const totalPaid = paidSales.reduce((acc, s) => acc + s.total_amount, 0);
+  const totalPending = pendingSales.reduce((acc, s) => acc + s.total_amount, 0);
+  const aov = paidSales.length > 0 ? totalPaid / paidSales.length : 0;
+
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const displayedSales = sales.filter(s => statusFilter === 'all' ? true : s.status === statusFilter);
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -139,28 +147,51 @@ export const SalesPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <StatCard
-          title="Total Paid Revenue"
+          title="Paid Revenue"
           value={`$${totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-          subtitle="Realized sales cashflow"
+          subtitle={`${paidSales.length} paid order(s)`}
           icon={<DollarSign size={20} />}
           color="green"
         />
         <StatCard
-          title="Total Invoiced Orders"
-          value={sales.length}
-          subtitle="All transactions logged"
+          title="Pending Invoices"
+          value={`$${totalPending.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          subtitle={`${pendingSales.length} invoice(s) pending`}
+          icon={<Clock size={20} />}
+          color={pendingSales.length > 0 ? 'amber' : 'green'}
+        />
+        <StatCard
+          title="Average Order Value"
+          value={`$${aov.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          subtitle="Revenue per paid sale"
           icon={<ShoppingCart size={20} />}
           color="brand"
         />
         <StatCard
-          title="Pending Payments"
-          value={pendingCount}
-          subtitle="Unpaid customer invoices"
-          icon={<Clock size={20} />}
-          color={pendingCount > 0 ? 'amber' : 'green'}
+          title="Total Recorded"
+          value={sales.length}
+          subtitle={`${cancelledSales.length} cancelled`}
+          icon={<CheckCircle size={20} />}
+          color="blue"
         />
+      </div>
+
+      <div className="flex items-center gap-2">
+        {['all', 'paid', 'pending', 'cancelled'].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setStatusFilter(tab)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition ${
+              statusFilter === tab
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
       <Card title="Sales Ledger" subtitle={`Orders for ${activeBusiness?.name || 'Default'}`}>
@@ -194,7 +225,7 @@ export const SalesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {sales.map((s) => {
+                {displayedSales.map((s) => {
                   const cust = customers.find(c => c.id === s.customer_id);
                   return (
                     <tr key={s.id} className="hover:bg-slate-50/50 transition">

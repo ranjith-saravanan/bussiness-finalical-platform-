@@ -1,22 +1,30 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.database import engine, Base
-import app.models  # ensure models are imported before creating tables
+from app.database import init_db, close_db
+import app.database as db_module
 from app.routers import (
     auth, dashboard, personal, business, analytics, forecast, ai, notifications, export
 )
 
-# Initialize database tables
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    is_testing = getattr(app.state, "testing", False)
+    if db_module.client is None and not is_testing:
+        await init_db()
+    yield
+    if not is_testing:
+        await close_db()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="Personal Business Advisor and Financial Management System API",
+    description="Personal Business Advisor and Financial Management System API with MongoDB",
     version="1.0.0",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url=f"{settings.API_V1_STR}/docs",
-    redoc_url=f"{settings.API_V1_STR}/redoc"
+    redoc_url=f"{settings.API_V1_STR}/redoc",
+    lifespan=lifespan
 )
 
 # CORS middleware
@@ -41,14 +49,15 @@ app.include_router(export.router, prefix=settings.API_V1_STR)
 
 @app.get("/healthz")
 def healthz():
-    return {"status": "ok", "app": settings.PROJECT_NAME}
+    return {"status": "ok", "app": settings.PROJECT_NAME, "database": "mongodb"}
 
 @app.get("/")
 def root():
     return {
         "message": "Welcome to MyBIZ API",
         "docs": f"{settings.API_V1_STR}/docs",
-        "health": "/healthz"
+        "health": "/healthz",
+        "database": "mongodb"
     }
 
 if __name__ == "__main__":

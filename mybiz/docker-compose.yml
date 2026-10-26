@@ -1,6 +1,22 @@
 version: '3.8'
 
 services:
+  mongodb:
+    image: mongo:7.0
+    container_name: mybiz-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=mybiz
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -9,11 +25,13 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=sqlite:///./mybiz.db
+      - MONGODB_URL=mongodb://mongodb:27017
+      - DATABASE_NAME=mybiz
       - SECRET_KEY=mybiz-secret-key-change-in-production-2026
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-    volumes:
-      - ./backend/mybiz.db:/app/mybiz.db
+    depends_on:
+      mongodb:
+        condition: service_started
     restart: unless-stopped
 
   frontend:
@@ -26,3 +44,6 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
+volumes:
+  mongodb_data:
